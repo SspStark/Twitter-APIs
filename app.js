@@ -137,19 +137,20 @@ app.get("/tweets/:tweetId/", accessToken, async (request, response) => {
   if (
     followersData.some((each) => each.following_user_id === tweetsData.user_id)
   ) {
-    const getTweetDetailsQuery = `
-            SELECT
-                tweet,
-                COUNT(DISTINCT(like.like_id)) AS likes,
-                COUNT(DISTINCT(reply.reply_id)) AS replies,
-                tweet.date_time AS dateTime
-            FROM 
-                tweet INNER JOIN like ON tweet.tweet_id = like.tweet_id INNER JOIN reply ON reply.tweet_id = tweet.tweet_id
-            WHERE 
-                tweet.tweet_id = ${tweetId};`;
+    const { tweet_id, date_time, tweet } = tweetsData;
+    const getLikes = `SELECT COUNT(like_id) AS likes FROM like WHERE tweet_id=${tweet_id}
+    GROUP BY tweet_id;`;
+    const likesData = await database.get(getLikes);
 
-    const tweetDetails = await db.get(getTweetDetailsQuery);
-    response.send(tweetDetails);
+    const getReplies = `SELECT COUNT(reply_id) AS replies FROM reply WHERE tweet_id=${tweet_id}
+    GROUP BY tweet_id;`;
+    const replyData = await database.get(getReplies);
+    response.send({
+      tweet,
+      likes: likesData.likes,
+      replies: replyData.replies,
+      dateTime: date_time,
+    });
   } else {
     response.status(401);
     response.send("Invalid Request");
