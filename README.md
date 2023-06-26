@@ -521,7 +521,7 @@ Created a Tweet
   - **Response**
     ```
     Tweet Removed
-    ```
+    ``
 
 </Section>
 
